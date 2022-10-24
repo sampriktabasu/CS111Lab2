@@ -21,8 +21,8 @@ struct process {
 
   /* Additional fields here */
   u32 time_remaining;
-  u32 time_elapsed;
-  bool response;
+  u32 start_time;
+  bool arrived;
   /* End of "Additional fields here" */
 };
 
@@ -146,12 +146,15 @@ int main(int argc, char *argv[])
 
   /* Your code here */
   struct process *temp_p;
+  u32 time_elapsed = 0;
+  bool finished = false;
   // initialize all processes from the data array from processes.txt
   for(u32 i = 0; i < size; i++) {
     temp_p = &data[i];
     // set the time remaining for each process equal to its burst time as no time has been completed for each process yet
     temp_p->time_remaining = temp_p->burst_time;
-    temp_p->response = false;
+    temp_p->start_time = 56789;
+    temp_p->arrived = false;
   }
 
   struct process *paused_process = NULL;
@@ -161,7 +164,7 @@ int main(int argc, char *argv[])
     // loop through all processes still in the array of processes from the txt, check arrival time and add newly arrived processes to the queue
     for(u32 i = 0; i < size; i++) {
       temp_p = &data[i];
-      if(temp_p->arrival_time == t) {
+      if(temp_p->arrival_time == time_elapsed && temp_p->arrived == false) {
 	TAILQ_INSERT_TAIL(&list, temp_p, pointers);
       }
     }
@@ -169,32 +172,80 @@ int main(int argc, char *argv[])
     temp_p = NULL;
 
     // check if there are is a process that had just been run but is paused/still has time remaining, place it at the end of the queue as well
-    if(paused != NULL) {
-      TAILQ_INSERT_TAIL(&list, paused, pointers);
+    if(paused_process != NULL) {
+      TAILQ_INSERT_TAIL(&list, paused_process, pointers);
+      paused_process->arrived = true;
       // reset the paused process holder to be null as it is now accounted for 
-      paused = NULL;
+      paused_process = NULL;
     }
 
     // check if the queue is empty, if not set current process to the first process in the queue
     if(!TAILQ_EMPTY(&list)) {
       temp_p = TAILQ_FIRST(&list);
+      if(temp_p->start_time == 56789) {
+	temp_p->start_time = time_elapsed;
+      }
     }
 
     // now check if there is any active process in the temp process holder variable
-    if(temp_p != NULL && p->time_remaining > 0 ) {
+    if(temp_p != NULL && temp_p->time_remaining > 0 ) {
       // decrement the time remaining for the process to run
-      p->time_remaining -= 1;
+      temp_p->time_remaining -= 1;
       // update the time that has passed in the quantum
       quantum_remaining -= 1;
-      //
-    }
-    
+     }
 
+    // if the time remaining for the process is 0 before the quantum is finished then remove it from the queue
+    if(temp_p != NULL && temp_p->time_remaining == 0) {
+      // removal of process from head of queue
+      TAILQ_REMOVE(&list, temp_p, pointers);
+      // reset quantum
+      quantum_remaining = quantum_length;
+      // update waiting time
+      total_waiting_time += (time_elapsed - temp_p->arrival_time - temp_p->burst_time + 1);
+      total_response_time += (temp_p->start_time - temp_p->arrival_time); 
+      ++time_elapsed;
+      continue;
+    }
+
+    // account for the end of the quantum
+    if(quantum_remaining == 0) {
+      // set process variable to last active process that was just running(head of the queue)
+      if(!TAILQ_EMPTY(&list)) {
+	temp_p = TAILQ_FIRST(&list);
+	if(temp_p->start_time == 56789) {
+	  temp_p->start_time = time_elapsed;
+	}
+      }
+      
+      if(temp_p != NULL) {
+	// identify this process as the paused process (to later be added back to the end of the queue if there is still time remaining)
+	total_waiting_time += (time_elapsed + 1 - temp_p->arrival_time - temp_p->burst_time);
+	total_response_time += (temp_p->start_time - temp_p->arrival_time);
+	paused_process = temp_p;
+	// remove process from the head of the queue
+	TAILQ_REMOVE(&list, temp_p, pointers);
+      }
+      
+    }
+
+    // after a quantum is complete, assume all processes may be finished
+    finished = true;
+
+    // now proof by contradiction style, loop through all processes, if any have time remaining then scheduling has not finished and the loop may not end
+    for(u32 i = 0; i < size; i++) {
+      temp_p= &data[i];
+      if(temp_p->time_remaining != 0) {
+	finished = false;
+	// as long as one process has time remaining the loop cannot finish so setting the boolean tracker to false and breaking is sufficient without checking the rest
+	break;
+      }
+    }
+
+    // increment the time_elapsed by 1 unit
+    ++time_elapsed;
     
   }
-  //check the arrival time 
-
-  time_elapsed = 0;
   
   /* End of "Your code here" */
 
