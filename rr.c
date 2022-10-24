@@ -20,6 +20,9 @@ struct process {
   TAILQ_ENTRY(process) pointers;
 
   /* Additional fields here */
+  u32 time_remaining;
+  u32 time_elapsed;
+  bool response;
   /* End of "Additional fields here" */
 };
 
@@ -142,6 +145,57 @@ int main(int argc, char *argv[])
   u32 total_response_time = 0;
 
   /* Your code here */
+  struct process *temp_p;
+  // initialize all processes from the data array from processes.txt
+  for(u32 i = 0; i < size; i++) {
+    temp_p = &data[i];
+    // set the time remaining for each process equal to its burst time as no time has been completed for each process yet
+    temp_p->time_remaining = temp_p->burst_time;
+    temp_p->response = false;
+  }
+
+  struct process *paused_process = NULL;
+  u32 quantum_remaining = quantum_length;
+  
+  while(!finished) {
+    // loop through all processes still in the array of processes from the txt, check arrival time and add newly arrived processes to the queue
+    for(u32 i = 0; i < size; i++) {
+      temp_p = &data[i];
+      if(temp_p->arrival_time == t) {
+	TAILQ_INSERT_TAIL(&list, temp_p, pointers);
+      }
+    }
+    // now that the active processes have been added to the TAILQ list, reset to be null
+    temp_p = NULL;
+
+    // check if there are is a process that had just been run but is paused/still has time remaining, place it at the end of the queue as well
+    if(paused != NULL) {
+      TAILQ_INSERT_TAIL(&list, paused, pointers);
+      // reset the paused process holder to be null as it is now accounted for 
+      paused = NULL;
+    }
+
+    // check if the queue is empty, if not set current process to the first process in the queue
+    if(!TAILQ_EMPTY(&list)) {
+      temp_p = TAILQ_FIRST(&list);
+    }
+
+    // now check if there is any active process in the temp process holder variable
+    if(temp_p != NULL && p->time_remaining > 0 ) {
+      // decrement the time remaining for the process to run
+      p->time_remaining -= 1;
+      // update the time that has passed in the quantum
+      quantum_remaining -= 1;
+      //
+    }
+    
+
+    
+  }
+  //check the arrival time 
+
+  time_elapsed = 0;
+  
   /* End of "Your code here" */
 
   printf("Average waiting time: %.2f\n", (float) total_waiting_time / (float) size);
