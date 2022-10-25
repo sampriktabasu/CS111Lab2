@@ -189,8 +189,8 @@ int main(int argc, char *argv[])
       temp_p->time_remaining -= 1;
       // update the time that has passed in the quantum
       quantum_remaining -= 1;
-        if(!temp_p->inserted) {
-            temp_p->inserted = true;
+        if(!temp_p->active) {
+            temp_p->active = true;
             total_response_time += (time_elapsed - temp_p->arrival_time);
         }
      }
@@ -218,6 +218,7 @@ int main(int argc, char *argv[])
               TAILQ_REMOVE(&list, temp_p, pointers);
           }
       }
+    }
       
 
     // after a quantum is complete, assume all processes may be finished
@@ -244,3 +245,4 @@ int main(int argc, char *argv[])
   free(data);
   return 0;
 }
+
