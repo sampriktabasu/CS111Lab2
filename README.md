@@ -1,16 +1,21 @@
 # You Spin Me Round Robin
 
-One line description of this code.
+This program is able to compute average waiting time and average response time for a given workload and quantum length using an implementation of round robin scheduling.
 
 ## Building
 
-Explain briefly how to build your program.
+To build the executable run the following command:
+make
 
 ## Running
 
-Show an example run of your program on the given `processes.txt` with whatever
-quantum length you want. Show the output you should expect.
+Example command to run the program:
+> ./rr processes.txt 3
+Expected output:
+Average Waiting Time: 7.00
+Average Response Time: 2.75
 
 ## Cleaning up
 
-Explain briefly how to clean up all binary files.
+To clean up all binary files run the following command:
+make clean
