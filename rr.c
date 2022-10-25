@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
             // update response time accordingly
             total_response_time += (time_elapsed - temp_p->arrival_time);
             }
-         }
+         
         
       // if the time remaining for the process is 0 before the quantum is finished then remove it from the queue
       if(temp_p != NULL && temp_p->time_remaining == 0) {
